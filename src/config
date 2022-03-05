@@ -1,2 +1,6 @@
 # 初始化敌方坦克的数量
 initTankCount=10
+
+#fireStrategy
+badFS=com.cy.tank.strategy.OneBulletStrategy
+goodFS=com.cy.tank.strategy.FourBulletStrategy

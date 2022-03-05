@@ -1,8 +1,12 @@
 package com.cy.tank;
 
+import com.cy.tank.Mgr.PropertiesMgr;
+import com.cy.tank.Mgr.ResourceMgr;
 import com.cy.tank.enums.Dir;
 import com.cy.tank.enums.Group;
-import com.sun.org.apache.xpath.internal.operations.Gt;
+import com.cy.tank.strategy.FireStrategy;
+import com.cy.tank.strategy.FourBulletStrategy;
+import com.cy.tank.strategy.OneBulletStrategy;
 
 import java.awt.*;
 import java.util.Random;
@@ -12,7 +16,7 @@ public class Tank {
     private int x, y;
     private Dir dir;
     private final int SPEED = 5;
-    private TankFrame tf;
+    public TankFrame tf;
     Random random = new Random();
 
     public static int WIDTH = ResourceMgr.goodTankU.getWidth();
@@ -21,6 +25,8 @@ public class Tank {
     private boolean moving = true;
     private boolean living = true;
     private Group group;
+
+    private FireStrategy defaultFS;
 
     public Tank(int x, int y, Dir dir,Group group, TankFrame tf) {
         this.x = x;
@@ -34,6 +40,24 @@ public class Tank {
         rect.y = y;
         rect.width = WIDTH;
         rect.height = HEIGHT;
+
+//        if (group == Group.GOOD) defaultFS = new FourBulletStrategy();
+//        else defaultFS = new OneBulletStrategy();
+        String fSName;
+        if (group == Group.GOOD) {
+            fSName = (String) PropertiesMgr.getInstance().get("goodFS");
+        } else {
+            fSName = (String) PropertiesMgr.getInstance().get("badFS");
+        }
+        try {
+            defaultFS = (FireStrategy) Class.forName(fSName).newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public void paint(Graphics g) {
@@ -108,11 +132,7 @@ public class Tank {
      * 发射子弹
      */
     public void fire() {
-        int bX = this.x + WIDTH / 2 - Bullet.WIDTH / 2;
-        int bY = this.y + HEIGHT / 2 - Bullet.HEIGHT / 2;
-        tf.bullets.add(new Bullet(bX, bY, this.dir, this.group, tf));
-
-        if(this.group == Group.GOOD) new Thread(()->new Audio("audio/tank_fire.wav").play()).start();
+        defaultFS.fire(this);
     }
 
     public void die() {

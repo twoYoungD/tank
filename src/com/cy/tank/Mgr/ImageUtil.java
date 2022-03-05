@@ -1,4 +1,4 @@
-package com.cy.tank;
+package com.cy.tank.Mgr;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

@@ -1,5 +1,7 @@
 package com.cy.tank;
 
+import com.cy.tank.Mgr.ResourceMgr;
+
 import java.awt.*;
 
 public class Explode {

@@ -1,10 +1,18 @@
-package com.cy.tank;
+package com.cy.tank.Mgr;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 public class ResourceMgr {
+
+    private final ResourceMgr INSTANCE = new ResourceMgr();
+
+    private ResourceMgr() {}
+
+    public ResourceMgr getInstance() {
+        return INSTANCE;
+    }
 
     public static BufferedImage goodTankL, goodTankU, goodTankR, goodTankD;
     public static BufferedImage badTankL, badTankU, badTankR, badTankD;
