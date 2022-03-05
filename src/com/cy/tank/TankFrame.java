@@ -13,12 +13,11 @@ import java.util.List;
 
 public class TankFrame extends Frame {
 
-    public Tank myTank = new Tank(200, 200, Dir.LEFT, Group.GOOD, this);
+    public Tank myTank = new Tank(200, 300, Dir.UP, Group.GOOD, this);
 
     List<Bullet> bullets = new ArrayList<>();
     public List<Tank> tanks = new ArrayList<>();
-
-    public Explode explode = new Explode(100, 100, this);
+    public List<Explode> explodes = new ArrayList<>();
 
     public final int GAME_WIDTH = 800, GAME_HEIGHT = 600;
 
@@ -38,8 +37,8 @@ public class TankFrame extends Frame {
         });
     }
 
+    // 双缓存解决闪烁问题
     Image offScreenImage = null;
-
     @Override
     public void update(Graphics g) {
         if (offScreenImage == null) {
@@ -76,7 +75,9 @@ public class TankFrame extends Frame {
             }
         }
 
-        explode.paint(g);
+        for (int i = 0; i < explodes.size(); i++) {
+            explodes.get(i).paint(g);
+        }
 
     }
 

@@ -1,4 +1,4 @@
-package com.cy.tank;
+package com.cy.tank.enums;
 
 public enum Group {
     GOOD, BAD
