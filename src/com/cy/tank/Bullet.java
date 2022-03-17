@@ -6,26 +6,24 @@ import com.cy.tank.enums.Group;
 
 import java.awt.*;
 
-public class Bullet {
+public class Bullet extends GameObject {
     private static final int SPEED = 10;
-    private int x, y;
     private Dir dir;
 
     public static int WIDTH = ResourceMgr.bulletD.getWidth();
     public static int HEIGHT = ResourceMgr.bulletD.getHeight();
 
     private boolean living = true;
-    private TankFrame tf;
     private Group group;
 
     private Rectangle rect = new Rectangle(); // 坦克所在的格子
 
-    public Bullet(int x, int y, Dir dir,Group group, TankFrame tf) {
+
+    public Bullet(int x, int y, Dir dir, Group group) {
         this.x = x;
         this.y = y;
         this.dir = dir;
         this.group = group;
-        this.tf = tf;
 
         // 初始化 rect 的值
         rect.x = x;
@@ -33,11 +31,11 @@ public class Bullet {
         rect.width = WIDTH;
         rect.height = HEIGHT;
 
-        tf.bullets.add(this);
+        GameModel.getInstance().add(this);
     }
 
     public void paint(Graphics g) {
-        if (!living) tf.bullets.remove(this);
+        if (!living) GameModel.getInstance().remove(this);
 
         switch (dir) {
             case LEFT:
@@ -57,6 +55,16 @@ public class Bullet {
         move();
     }
 
+    @Override
+    public int getWidth() {
+        return WIDTH;
+    }
+
+    @Override
+    public int getHeight() {
+        return HEIGHT;
+    }
+
     private void move() {
         switch (dir) {
             case LEFT:
@@ -72,22 +80,13 @@ public class Bullet {
                 y += SPEED;
                 break;
         }
-        if (x < 0 || y < 0 || x > tf.GAME_WIDTH || y > tf.GAME_HEIGHT) living = false;
+        if (x < 0 || y < 0 || x > TankFrame.GAME_WIDTH || y > TankFrame.GAME_HEIGHT) living = false;
         // 更新 rect
         rect.x = this.x;
         rect.y = this.y;
     }
 
-    // 子弹打中坦克
-    public void crashWith(Tank tank) {
-        if (this.group == tank.getGroup()) return;
-        if(rect.intersects(tank.rect)) {
-            tank.die();
-            this.die();
-        }
-    }
-
-    private void die() {
+    public void die() {
         this.living = false;
     }
 
@@ -113,5 +112,9 @@ public class Bullet {
 
     public void setGroup(Group group) {
         this.group = group;
+    }
+
+    public Rectangle getRect() {
+        return rect;
     }
 }

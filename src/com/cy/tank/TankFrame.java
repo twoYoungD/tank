@@ -1,7 +1,9 @@
 package com.cy.tank;
 
 import com.cy.tank.enums.Dir;
-import com.cy.tank.enums.Group;
+import com.cy.tank.observer.CtrlObserver;
+import com.cy.tank.observer.FireEvent;
+import com.cy.tank.observer.Observer;
 
 import java.awt.*;
 import java.awt.event.KeyAdapter;
@@ -13,13 +15,9 @@ import java.util.List;
 
 public class TankFrame extends Frame {
 
-    public Tank myTank = new Tank(200, 300, Dir.UP, Group.GOOD, this);
+    public static final int GAME_WIDTH = 800, GAME_HEIGHT = 600;
 
-    List<Bullet> bullets = new ArrayList<>();
-    public List<Tank> tanks = new ArrayList<>();
-    public List<Explode> explodes = new ArrayList<>();
-
-    public final int GAME_WIDTH = 800, GAME_HEIGHT = 600;
+    public GameModel gm = GameModel.getInstance();
 
     public TankFrame() {
         setSize(GAME_WIDTH, GAME_HEIGHT);
@@ -55,30 +53,7 @@ public class TankFrame extends Frame {
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
-        g.setColor(Color.WHITE);
-        g.drawString("子弹的数量：" + bullets.size(), 10,60);
-        g.drawString("坦克的数量：" + tanks.size(), 10,80);
-        g.setColor(c);
-
-        myTank.paint(g);
-        for (int i = 0; i < bullets.size(); i++) {
-            bullets.get(i).paint(g);
-        }
-        for (int i = 0; i < tanks.size(); i++) {
-            tanks.get(i).paint(g);
-        }
-
-        for (int i = 0; i < bullets.size(); i++) {
-            for (int j = 0; j < tanks.size(); j++) {
-                bullets.get(i).crashWith(tanks.get(j));
-            }
-        }
-
-        for (int i = 0; i < explodes.size(); i++) {
-            explodes.get(i).paint(g);
-        }
-
+        gm.paint(g);
     }
 
 
@@ -88,6 +63,9 @@ public class TankFrame extends Frame {
         boolean bR = false;
         boolean bU = false;
         boolean bD = false;
+
+        private List<Observer> observers = new ArrayList<>();
+
 
         @Override
         public void keyPressed(KeyEvent e) {
@@ -125,14 +103,26 @@ public class TankFrame extends Frame {
                 case KeyEvent.VK_DOWN:
                     bD = false;
                     break;
+                case KeyEvent.VK_S:
+                    gm.save();
+                    break;
+                case KeyEvent.VK_L:
+                    gm.load();
+                    break;
                 case KeyEvent.VK_CONTROL:
-                    myTank.fire();
+                   // gm.getMainTank().fire();
+                    observers.add(new CtrlObserver());
+                    FireEvent event = new FireEvent(gm.getMainTank());
+                    for (Observer observer : observers) {
+                        observer.ctrlPress(event);
+                    }
                     break;
             }
             setTankDir();
         }
 
         public void setTankDir() {
+            Tank myTank = gm.getMainTank();
             if (!bL && !bR && !bU && !bD) myTank.setMoving(false);
             else {
                 myTank.setMoving(true);
