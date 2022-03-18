@@ -1,20 +1,21 @@
 package com.cy.tank;
 
-import com.cy.tank.Mgr.PropertiesMgr;
 import com.cy.tank.Mgr.ResourceMgr;
 import com.cy.tank.enums.Dir;
 import com.cy.tank.enums.Group;
-import com.cy.tank.strategy.FireStrategy;
-import com.cy.tank.strategy.FourBulletStrategy;
-import com.cy.tank.strategy.OneBulletStrategy;
+import com.cy.tank.netty.TankJoinMsg;
 
 import java.awt.*;
 import java.util.Random;
+import java.util.UUID;
 
 public class Tank {
     public Rectangle rect = new Rectangle();
     private int x, y;
     private Dir dir;
+    private boolean moving = false;
+    private Group group;
+    private UUID id = UUID.randomUUID();
     private final int SPEED = 5;
     public TankFrame tf;
     Random random = new Random();
@@ -22,11 +23,16 @@ public class Tank {
     public static int WIDTH = ResourceMgr.goodTankU.getWidth();
     public static int HEIGHT = ResourceMgr.goodTankU.getHeight();
 
-    private boolean moving = true;
     private boolean living = true;
-    private Group group;
 
-    private FireStrategy defaultFS;
+    public Tank(TankJoinMsg msg) {
+        this.id = msg.getId();
+        this.x = msg.getX();
+        this.y = msg.getY();
+        this.dir = msg.getDir();
+        this.moving = msg.isMoving();
+        this.group = msg.getGroup();
+    }
 
     public Tank(int x, int y, Dir dir,Group group, TankFrame tf) {
         this.x = x;
@@ -41,31 +47,17 @@ public class Tank {
         rect.width = WIDTH;
         rect.height = HEIGHT;
 
-//        if (group == Group.GOOD) defaultFS = new FourBulletStrategy();
-//        else defaultFS = new OneBulletStrategy();
-        String fSName;
-        if (group == Group.GOOD) {
-            fSName = (String) PropertiesMgr.getInstance().get("goodFS");
-        } else {
-            fSName = (String) PropertiesMgr.getInstance().get("badFS");
-        }
-        try {
-            defaultFS = (FireStrategy) Class.forName(fSName).newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
     }
 
     public void paint(Graphics g) {
         if (!living) {
             tf.explodes.add(new Explode(this.x, this.y, tf));
-            tf.tanks.remove(this);
+            tf.removeByUUid(this.getId());
         }
 
+        Color c = g.getColor();
+        g.setColor(Color.YELLOW);
+        g.drawString(id.toString(), x - 10, y - 10);
         switch (dir) {
             case LEFT:
                 g.drawImage(this.group == Group.GOOD ? ResourceMgr.goodTankL : ResourceMgr.badTankL, x, y, null);
@@ -102,11 +94,11 @@ public class Tank {
         }
 
         // 随机发射子弹
-        if(this.group == Group.BAD && random.nextInt(100) > 96)
-            this.fire();
-        // 随机改变方向
-        if (this.group == Group.BAD && random.nextInt(100) > 95)
-            randomDir();
+//        if(this.group == Group.BAD && random.nextInt(100) > 96)
+//            this.fire();
+//        // 随机改变方向
+//        if (this.group == Group.BAD && random.nextInt(100) > 95)
+//            randomDir();
 
         // 设置边界
         boundsCheck();
@@ -132,7 +124,12 @@ public class Tank {
      * 发射子弹
      */
     public void fire() {
-        defaultFS.fire(this);
+        int bX = this.getX() + this.WIDTH / 2 - Bullet.WIDTH / 2;
+        int bY = this.getY() + this.HEIGHT / 2 - Bullet.HEIGHT / 2;
+
+        new Bullet(bX, bY, this.getDir(), this.getGroup());
+
+        if(this.getGroup() == Group.GOOD) new Thread(()->new Audio("audio/tank_fire.wav").play()).start();
     }
 
     public void die() {
@@ -179,4 +176,11 @@ public class Tank {
         this.dir = dir;
     }
 
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
 }

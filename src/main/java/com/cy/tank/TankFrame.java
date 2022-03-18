@@ -2,30 +2,37 @@ package com.cy.tank;
 
 import com.cy.tank.enums.Dir;
 import com.cy.tank.enums.Group;
+import com.cy.tank.netty.Client;
+import com.cy.tank.netty.TankMoveMsg;
+import com.cy.tank.netty.TankStopMsg;
 
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 public class TankFrame extends Frame {
 
-    public Tank myTank = new Tank(200, 300, Dir.UP, Group.GOOD, this);
+    public static final TankFrame INSTANCE = new TankFrame();
+
+    public static final int GAME_WIDTH = 800, GAME_HEIGHT = 600;
+    Random r = new Random();
+
+    private Tank myTank = new Tank(r.nextInt(GAME_WIDTH), r.nextInt(GAME_HEIGHT),
+            Dir.values()[r.nextInt(Dir.values().length)], Group.values()[r.nextInt(Group.values().length)], this);
 
     List<Bullet> bullets = new ArrayList<>();
-    public List<Tank> tanks = new ArrayList<>();
+    private Map<UUID, Tank> tanks = new HashMap<>();
     public List<Explode> explodes = new ArrayList<>();
 
-    public final int GAME_WIDTH = 800, GAME_HEIGHT = 600;
 
-    public TankFrame() {
+    private TankFrame() {
         setSize(GAME_WIDTH, GAME_HEIGHT);
         setResizable(false);
         setTitle("坦克大战");
-        setVisible(true);
 
         addKeyListener(new MyKeyListener());
 
@@ -47,10 +54,10 @@ public class TankFrame extends Frame {
         Graphics gOffScreen = offScreenImage.getGraphics();
         Color c = gOffScreen.getColor();
         gOffScreen.setColor(Color.BLACK);
-        gOffScreen.fillRect(0,0,GAME_WIDTH, GAME_HEIGHT);
+        gOffScreen.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         gOffScreen.setColor(c);
         paint(gOffScreen);
-        g.drawImage(offScreenImage, 0,0,null);
+        g.drawImage(offScreenImage, 0, 0, null);
     }
 
     @Override
@@ -62,11 +69,11 @@ public class TankFrame extends Frame {
         g.setColor(c);
 
         myTank.paint(g);
+
+        tanks.values().stream().forEach((e) -> e.paint(g));
+
         for (int i = 0; i < bullets.size(); i++) {
             bullets.get(i).paint(g);
-        }
-        for (int i = 0; i < tanks.size(); i++) {
-            tanks.get(i).paint(g);
         }
 
         for (int i = 0; i < bullets.size(); i++) {
@@ -133,15 +140,35 @@ public class TankFrame extends Frame {
         }
 
         public void setTankDir() {
-            if (!bL && !bR && !bU && !bD) myTank.setMoving(false);
+            if (!bL && !bR && !bU && !bD) {
+                myTank.setMoving(false);
+                Client.INSTANCE.send(new TankStopMsg(getMainTank()));
+            }
             else {
                 myTank.setMoving(true);
                 if (bL) myTank.setDir(Dir.LEFT);
                 if (bR) myTank.setDir(Dir.RIGHT);
                 if (bU) myTank.setDir(Dir.UP);
                 if (bD) myTank.setDir(Dir.DOWN);
+                Client.INSTANCE.send(new TankMoveMsg(myTank));
             }
         }
+    }
+
+    public Tank getMainTank() {
+        return myTank;
+    }
+
+    public void addTank(Tank t) {
+        tanks.put(t.getId(), t);
+    }
+
+    public Tank findByUUId(UUID id) {
+        return tanks.get(id);
+    }
+
+    public void removeByUUid(UUID id) {
+        tanks.remove(id);
     }
 
 }

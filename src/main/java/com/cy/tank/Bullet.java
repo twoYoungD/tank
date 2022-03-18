@@ -15,17 +15,15 @@ public class Bullet {
     public static int HEIGHT = ResourceMgr.bulletD.getHeight();
 
     private boolean living = true;
-    private TankFrame tf;
     private Group group;
 
     private Rectangle rect = new Rectangle(); // 坦克所在的格子
 
-    public Bullet(int x, int y, Dir dir,Group group, TankFrame tf) {
+    public Bullet(int x, int y, Dir dir,Group group) {
         this.x = x;
         this.y = y;
         this.dir = dir;
         this.group = group;
-        this.tf = tf;
 
         // 初始化 rect 的值
         rect.x = x;
@@ -33,11 +31,11 @@ public class Bullet {
         rect.width = WIDTH;
         rect.height = HEIGHT;
 
-        tf.bullets.add(this);
+        TankFrame.INSTANCE.bullets.add(this);
     }
 
     public void paint(Graphics g) {
-        if (!living) tf.bullets.remove(this);
+        if (!living) TankFrame.INSTANCE.bullets.remove(this);
 
         switch (dir) {
             case LEFT:
@@ -72,7 +70,7 @@ public class Bullet {
                 y += SPEED;
                 break;
         }
-        if (x < 0 || y < 0 || x > tf.GAME_WIDTH || y > tf.GAME_HEIGHT) living = false;
+        if (x < 0 || y < 0 || x > TankFrame.GAME_WIDTH || y > TankFrame.GAME_HEIGHT) living = false;
         // 更新 rect
         rect.x = this.x;
         rect.y = this.y;
